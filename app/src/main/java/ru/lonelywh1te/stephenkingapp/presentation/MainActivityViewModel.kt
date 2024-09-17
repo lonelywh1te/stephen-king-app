@@ -18,7 +18,7 @@ class MainActivityViewModel(
     private val _books = MutableLiveData<Result<List<Book>>>()
     val books: LiveData<Result<List<Book>>> get() = _books
 
-    private val _isLoading = MutableLiveData<Boolean>()
+    private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> get() = _isLoading
 
     fun getBooksAfterYear(year: Int) {

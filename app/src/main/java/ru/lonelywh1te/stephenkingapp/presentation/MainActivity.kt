@@ -42,14 +42,10 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
                 is Result.Success -> bookAdapter.updateList(result.data)
                 is Result.Error -> showError(result.e.message.toString())
             }
-
-            hideRefreshLayout()
         }
 
         viewModel.isLoading.observe(this) { isLoading ->
-            with(binding) {
-                pbLoadingBooks.visibility = if (isLoading && !layoutSwipeRefresh.isRefreshing) View.VISIBLE else View.GONE
-            }
+            updateLoadingState(isLoading)
         }
     }
 
@@ -85,11 +81,20 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
     }
 
     override fun onRefresh() {
-        binding.layoutSwipeRefresh.isRefreshing = true
         viewModel.getBooksAfterYear(1990)
     }
 
-    private fun hideRefreshLayout() {
-        if (binding.layoutSwipeRefresh.isRefreshing) binding.layoutSwipeRefresh.isRefreshing = false
+    private fun updateLoadingState(isLoading: Boolean) {
+        with(binding) {
+            if (!isLoading && layoutSwipeRefresh.isRefreshing) layoutSwipeRefresh.isRefreshing = false
+
+            if (isLoading && !layoutSwipeRefresh.isRefreshing) {
+                layoutSwipeRefresh.isEnabled = false
+                pbLoadingBooks.visibility = View.VISIBLE
+            } else {
+                layoutSwipeRefresh.isEnabled = true
+                pbLoadingBooks.visibility = View.GONE
+            }
+        }
     }
 }
