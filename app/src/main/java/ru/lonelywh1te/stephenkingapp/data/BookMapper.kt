@@ -7,6 +7,7 @@ class BookMapper {
 
     fun bookDtoToBook(bookDto: BookDto): Book {
         return Book(
+            id = bookDto.id,
             title = bookDto.title,
             year = bookDto.year
         )
