@@ -27,6 +27,8 @@ class BookAdapter: RecyclerView.Adapter<BookViewHolder>() {
         this.list = list
         notifyDataSetChanged()
     }
+
+    fun getList(): List<Book> = list
 }
 
 class BookViewHolder(private val binding: ItemBookBinding): RecyclerView.ViewHolder(binding.root) {

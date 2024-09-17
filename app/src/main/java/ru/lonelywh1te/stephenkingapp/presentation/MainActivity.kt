@@ -1,15 +1,23 @@
 package ru.lonelywh1te.stephenkingapp.presentation
 
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView.Orientation
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.snackbar.Snackbar
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.lonelywh1te.stephenkingapp.databinding.ActivityMainBinding
+import ru.lonelywh1te.stephenkingapp.domain.model.Book
+import ru.lonelywh1te.stephenkingapp.domain.model.Result
 import ru.lonelywh1te.stephenkingapp.presentation.adapter.BookAdapter
+import java.util.ArrayList
+
+private const val BOOKS_BUNDLE_KEY = "books"
 
 class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
     private lateinit var binding: ActivityMainBinding
@@ -23,17 +31,50 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
         setContentView(binding.root)
         setupRecyclerView()
 
-        binding.layoutSwipeRefresh.setOnRefreshListener(this)
-
         if (savedInstanceState == null) {
             viewModel.getBooksAfterYear(1990)
-            binding.pbLoadingBooks.visibility = View.VISIBLE
         }
 
-        viewModel.books.observe(this) {
-            bookAdapter.updateList(it)
-            updateUI()
+        binding.layoutSwipeRefresh.setOnRefreshListener(this)
+
+        viewModel.books.observe(this) { result ->
+            when (result) {
+                is Result.Success -> bookAdapter.updateList(result.data)
+                is Result.Error -> showError(result.e.message.toString())
+            }
+
+            hideRefresh()
         }
+
+        viewModel.isLoading.observe(this) { isLoading ->
+            with(binding) {
+                pbLoadingBooks.visibility = if (isLoading && !layoutSwipeRefresh.isRefreshing) View.VISIBLE else View.GONE
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelableArrayList(BOOKS_BUNDLE_KEY, ArrayList(bookAdapter.getList()))
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+
+        val list = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            savedInstanceState.getParcelableArrayList(BOOKS_BUNDLE_KEY, Book::class.java)
+        } else {
+            savedInstanceState.getParcelableArrayList(BOOKS_BUNDLE_KEY)
+        }
+
+        list?.let { bookAdapter.updateList(it) }
+    }
+
+    private fun showError(message: String) {
+        Snackbar
+            .make(binding.root, message, Snackbar.LENGTH_LONG)
+            .setBackgroundTint(ContextCompat.getColor(this, com.google.android.material.R.color.design_default_color_error))
+            .show()
     }
 
     private fun setupRecyclerView() = binding.rvBooks.apply {
@@ -43,15 +84,12 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
         addItemDecoration(DividerItemDecoration(this@MainActivity, LinearLayoutManager.VERTICAL))
     }
 
-    private fun updateUI() {
-        with(binding) {
-            if (layoutSwipeRefresh.isRefreshing) layoutSwipeRefresh.isRefreshing = false
-            if (pbLoadingBooks.visibility == View.VISIBLE) pbLoadingBooks.visibility = View.GONE
-        }
-    }
-
     override fun onRefresh() {
         binding.layoutSwipeRefresh.isRefreshing = true
         viewModel.getBooksAfterYear(1990)
+    }
+
+    private fun hideRefresh() {
+        if (binding.layoutSwipeRefresh.isRefreshing) binding.layoutSwipeRefresh.isRefreshing = false
     }
 }
