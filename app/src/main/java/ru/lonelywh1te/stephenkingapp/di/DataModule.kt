@@ -20,6 +20,6 @@ val dataModule = module {
     }
 
     single<IBookRepository> {
-        BookRepositoryImpl(api = get())
+        BookRepositoryImpl(bookApi = get())
     }
 }

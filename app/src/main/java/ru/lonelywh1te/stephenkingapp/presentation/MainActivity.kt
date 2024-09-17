@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
                 is Result.Error -> showError(result.e.message.toString())
             }
 
-            hideRefresh()
+            hideRefreshLayout()
         }
 
         viewModel.isLoading.observe(this) { isLoading ->
@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
         viewModel.getBooksAfterYear(1990)
     }
 
-    private fun hideRefresh() {
+    private fun hideRefreshLayout() {
         if (binding.layoutSwipeRefresh.isRefreshing) binding.layoutSwipeRefresh.isRefreshing = false
     }
 }

@@ -9,17 +9,17 @@ import ru.lonelywh1te.stephenkingapp.domain.repository.IBookRepository
 
 private const val LOG_TAG = "BookRepositoryImpl"
 
-class BookRepositoryImpl(private val api: BookApi): IBookRepository {
+class BookRepositoryImpl(private val bookApi: BookApi): IBookRepository {
     private val mapper = BookMapper()
 
     override suspend fun getBooks(): Result<List<Book>> {
         try {
-            val response = api.getBooks()
+            val response = bookApi.getBooks()
 
             if (response.isSuccessful) {
                 response.body()?.let { body ->
                     val data = body.data
-                    val books = data.map { book -> mapper.bookDtoToBook(book) }
+                    val books = data.map { bookDto -> mapper.bookDtoToBook(bookDto) }
 
                     return Result.Success(data = books)
                 }
@@ -29,6 +29,7 @@ class BookRepositoryImpl(private val api: BookApi): IBookRepository {
                 return Result.Error(Exception("Error: ${response.code()} ${response.message()}"))
             }
         } catch (e: Exception) {
+            Log.e(LOG_TAG, "", e)
             return Result.Error(e)
         }
     }
